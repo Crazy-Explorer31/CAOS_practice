@@ -1,0 +1,22 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+          "label": "caos",
+          "type": "shell",
+          "command": "make build",
+          "problemMatcher": {
+              "pattern": {
+                "regexp": "error"
+              }
+            },
+          "presentation": {
+              "focus": true,
+              "panel": "dedicated",
+              "reveal": "silent",
+              "clear": true,
+              "close": true
+          }
+        },
+    ]
+}

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<problem
+        package="asm.functions"
+        id="wrong-function"
+        type="standard">
+  <statement language="ru_RU">
+    <description>
+<p>Студент Миша ошибся при написании своей функции <code>process</code> и забыл добавить пролог.
+При этом с прологом его функция корректна и возвращает некоторое число.
+Но вот незадача - переписать его исходный код вы не можете.</p>
+<p>Напишите программу, которая вызовет функцию <code>int process();</code> ровно один раз и выведет возвращаемое число.
+</p>
+<p>Функция <code>process</code> скомпилирована в отдельной единице трансляции и не является статичной.
+</p>
+<p>Для вывода используйте <code>printf("%d\n", number);</code></p>
+<p>Не используйте call process</p>
+
+<p>Например, если Мишина функция такова:</p>
+<pre>mov rax, 4
+mov rsp, rbp
+pop rbp
+ret</pre>
+	<p>то ваша программа должна вывести число 4.</p>
+        <p>Не забывайте что при call стек должен быть выровнен по 16 байт</p>
+
+
+    </description>
+  </statement>
+<review_comments>
+<comment>Необходимо указать .text перед инструкциями процессору.</comment>
+</review_comments>
+</problem>
