@@ -1,0 +1,18 @@
+
+02-pure-asm:     file format elf64-x86-64
+architecture: i386:x86-64, flags 0x00000150:
+HAS_SYMS, DYNAMIC, D_PAGED
+start address 0x0000000000001000
+
+
+Disassembly of section .text:
+
+0000000000001000 <_start>:
+    1000:	48 c7 c0 01 00 00 00 	mov    $0x1,%rax
+    1007:	48 c7 c7 01 00 00 00 	mov    $0x1,%rdi
+    100e:	48 8d 35 eb 1f 00 00 	lea    0x1feb(%rip),%rsi        # 3000 <msg>
+    1015:	48 c7 c2 0e 00 00 00 	mov    $0xe,%rdx
+    101c:	0f 05                	syscall
+    101e:	48 c7 c0 3c 00 00 00 	mov    $0x3c,%rax
+    1025:	48 c7 c7 00 00 00 00 	mov    $0x0,%rdi
+    102c:	0f 05                	syscall

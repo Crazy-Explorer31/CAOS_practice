@@ -1,0 +1,479 @@
+\documentclass[pdf, 10pt, unicode]{beamer}
+
+\usepackage[T2A]{fontenc}
+%\usepackage[cp1251]{inputenc}
+\usepackage[utf8]{inputenc}
+\usepackage[russian,english]{babel}
+\usepackage{minted}
+\usemintedstyle{perldoc}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{multicol}
+\usepackage{multirow}
+\usepackage{calrsfs}
+\usepackage{listings}
+\usepackage{color}
+
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+% \lstset{basicstyle=\fontsize{7pt}{1em}\ttfamily,
+%         keywordstyle=\fontsize{7pt}{1em}\color{MOOCBlue}\bfseries,
+%         commentstyle=\fontsize{7pt}{1em}\ttfamily\color{MOOCGreen}}
+
+
+\usepackage{caption}
+\usepackage{subcaption}
+
+% \lstset{language=C++,
+%   basicstyle=\footnotesize\itshape,
+%   keywordstyle=\color{black}\bfseries\underbar,
+%   % underlined bold black keywords
+%   identifierstyle={\color{black}},%
+%   commentstyle=\color{brown}, % brown comments
+%   stringstyle=\color{blue}\ttfamily, % typewriter type for strings, blue
+%   showstringspaces=false
+% }
+
+\definecolor{MOOCGrey}{RGB}{230,230,230}
+\definecolor{MOOCBlue}{RGB}{38,57,200}
+\definecolor{MOOCGreen}{RGB}{38,130,63}
+
+\lstset{extendedchars=true}
+\lstset{language=C++, basicstyle=\small\ttfamily,  keywordstyle=\small\color{MOOCBlue}\bfseries,
+        commentstyle=\small\ttfamily\color{MOOCGreen}, showstringspaces=false,
+        extendedchars=true, texcl=true, frame=single,
+        morekeywords={size_t}}
+
+
+
+\newenvironment{changemargin}[2]{%
+\begin{list}{}{%
+\setlength{\topsep}{0pt}%
+\setlength{\leftmargin}{#1}%
+\setlength{\rightmargin}{#2}%
+\setlength{\listparindent}{\parindent}%
+\setlength{\itemindent}{\parindent}%
+\setlength{\parsep}{\parskip}%
+}%
+\item[]}{\end{list}}
+
+
+\usetheme{Copenhagen}
+\usepackage{color}
+
+\usecolortheme[RGB={50,100,200}]{structure}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{itemize
+item}{\scriptsize\raise1.25pt\hbox{\donotcoloroutermaths$\blacktriangleright$}}
+
+\setbeamertemplate{frametitle continuation}[from second]
+
+\title{Воспоминания об указателях.}
+\author{Евгений Линский}
+\date{}
+\usefonttheme[onlymath]{serif}
+
+\setbeamerfont{institute}{size=\normalsize}
+
+\setbeamertemplate{footline} {
+  \hbox{%
+  \begin{beamercolorbox}[wd=0.08\paperwidth,ht=2.5ex,dp=0ex,left]{title in head/foot}%
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=0.46\paperwidth,ht=2.5ex,dp=1ex,center]{title in head/foot}%
+    \usebeamerfont{title in head/foot}{C++}%\insertshortauthor %\insertshorttitle
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=0.46\paperwidth,ht=2.5ex,dp=1ex,right]{date in head/foot}%
+    \usebeamerfont{date in head/foot}
+    \insertframenumber{} / \inserttotalframenumber{}\hspace*{2ex}
+  \end{beamercolorbox}}%
+  \vskip0pt%
+}
+
+\sloppy
+
+\begin{document}
+\begin{frame}
+  \vspace{1cm}
+  \large
+  \maketitle
+  \thispagestyle{empty}
+  \vspace{1cm}
+  \date{}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt Типы}}
+
+\begin{tabular}{lll}
+Название & Кол-во байт & Диапазон \\
+типа     & для хранения & \\
+\hline
+char  & 1 & $-2^{7}..2^{7}-1$ \\
+short & 2 & $-2^{15}..2^{15}-1$ \\
+int   & 4 & $-2^{31}..2^{31}-1$ \\
+long  & 4 & $-2^{31}..2^{31}-1$ \\
+long long & 8 & $-2^{63}..2^{63}-1$ \\
+unsigned char  & 1 & $0..2^{8}-1$ \\
+unsigned short & 2 & $0..2^{16}-1$ \\
+unsigned int   & 4 & $0..2^{32}-1$ \\
+unsigned long  & 4 & $0..2^{32}-1$ \\
+unsigned long long & 8 & $0..2^{64}-1$ \\
+\hline
+float  & 4 & $1,4 \cdot 10^{-45}.. 3.4 \cdot 10^{38}$ \\
+double & 8 & $4,94 \cdot 10^{-324}.. 1.79 \cdot 10^{308}$ \\
+\end{tabular}
+
+В чем подвох?
+\end{frame}
+
+\begin{frame}[fragile]{{\tt Зависимость от платформы}}
+\begin{enumerate}
+  \item На самом деле размеры типов зависят от платформы (процессор, ОС, компилятор)
+  \item int --- ``естественный'' тип (компьютеру проще работать: ширина регистров, особенности набора инструкций)
+  \item На самом деле, например: $ sizeof(short) \leq sizeof(int) \leq sizeof(long) $
+  \item \emph{sizeof} --- оператор языка (не функция), во время компиляции заменяется на размер типа
+\end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt Массивы}}
+Одномерные:
+\begin{minted}[linenos=true]{cpp}
+  int array[10]; // размер  10*sizeof(int)
+  //Инициализация:
+  int array[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+  int array[10] = {0}; // обнулить
+  int array[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+  //для типа char:
+  char array[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+  char array[] = {'H', 'e', 'l', 'l', 'o'};
+  char array[] = "Hello"; // размер?
+\end{minted}
+
+\begin{enumerate}
+\uncover<2->{\item Рзамер 6 (завершающий 0)!}
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}[fragile]{{\tt Указатели}}
+\begin{enumerate}
+  \item Указатель (pointer) --- число, адрес (т.е. смещение от начала) соответствующего элемента в памяти
+  \item int* p; --- указатель на ячейку, в которой хранится int (в `p' будет хранится адрес)
+  \item Количество байт для хранения указателя зависит от архитектуры компьютера (на x86 сейчас --- 64 бита)
+    \item sizeof(int*) == sizeof(char*) == sizeof(double*) etc
+\end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt Указатели}}
+\begin{minted}[linenos=true]{cpp}
+  int a = 42;
+  int *p = &a; // & -- взять адрес a
+  int b = *p; // взять значение по адресу p (разыменовать)
+  printf("%p", p); // вывести адрес
+\end{minted}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt Указатели}}
+Сдвиг зависит от типа объекта, на который указывает указатель.
+\begin{minted}[linenos=true]{cpp}
+  int array[5] = {1, 2, 3, 4, 5};
+  char str[] = "hello";
+  int *pi = array; // pi = &array[0]
+  char *pc = str; // pc = &str[0]
+  pi += 1; // сдвиг адреса на sizeof(int)
+  pc += 1; // сдвиг адреса на sizeof(char)
+\end{minted}
+
+array[i] == i[array]:
+\begin{minted}[linenos=true]{cpp}
+array[i] --> *(array + i)
+i[array] --> *(i + array)
+\end{minted}
+
+\end{frame}
+
+\begin{frame}[fragile]{{\tt Различие между разными видами указателей}}
+\begin{minted}[linenos=true]{cpp}
+char str[4];
+char *pc = &c[0]; // &c[0] – адрес нулевого элемента массива
+                  // или адрес массива
+int *pi = pc; // C -- ok, C++ -- error (разные типы)
+int *pi = (int*)pc; // C -- ok, C++ -- ok
+\end{minted}
+
+\begin{minted}[linenos=true]{cpp}
+char array[10];
+char *p;
+p = array; // в p передается адрес массива
+           // (адрес нулевого элемента)
+array = p; // это ошибка
+\end{minted}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt Применение - 1}}
+\begin{minted}[linenos=true]{cpp}
+void swap(double a, double b){
+  double tmp = a;
+  a = b;
+  b = tmp;
+}
+int main() {
+  double c = 3; double d = 4;
+  swap(c, d);
+  return 0;
+}
+\end{minted}
+\begin{enumerate}
+\uncover<2->{\item Ничего не получится.}
+\uncover<3->{\item Функция работает с копиями параметров (a и b поменяются, c и d нет).}
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}[fragile]{{\tt Применение - 1}}
+\begin{minted}[linenos=true]{cpp}
+void swap(double *pa, double *pb){
+  double tmp = *pa;
+  *pa = *pb;
+  *pb = tmp;
+}
+int main() {
+  double c = 3; double d = 4;
+  swap(&c, &d);
+  return 0;
+}
+\end{minted}
+
+\end{frame}
+
+\begin{frame}[fragile]{{\tt Применение - 2}}
+Передать в функцию большой объект и не копировать его!
+\begin{minted}[linenos=true]{cpp}
+char str[] = "Hello";
+int l = strlen(str);
+\end{minted}
+
+\end{frame}
+
+\begin{frame}[fragile]{{\tt Применение - 3}}
+\begin{tabular}{ll}
+\begin{lstlisting}
+int strlen(char* ptr){
+  int len = 0;
+  while (ptr[len] != '\0'){
+    ++len;
+  }
+  return len;
+}
+\end{lstlisting}
+&
+\begin{lstlisting}
+int strlen(char* ptr){
+  char* p = ptr;
+  while (*p != '\0'){
+    ++p;
+  }
+  return p - ptr;
+}
+\end{lstlisting}
+\end{tabular}
+
+\begin{enumerate}
+\uncover<2->{\item ptr[len] --> *(ptr+len) одно сложение!}
+\uncover<3->{\item '\textbackslash0' --- символ с кодом 0.}
+\uncover<4->{\item (p - ptr) --- длина строки (складывать указатели нельзя) .}
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}[fragile]{{\tt const у указателя}}
+const защищает то, что \emph{перед} ним.
+\begin{minted}[linenos=true]{cpp}
+char s1[] = "hello";
+char s2[] = "bye";
+char const * p1 = s1;
+p1[0] = 'a'; // compilation error
+p1 = s2; // ok
+char * const p2 = s1;
+p2[0] = 'a'; // ok
+p2 = s2; // compilation error
+char const * const p3 = s1;
+\end{minted}
+Но можно и так:
+\begin{minted}[linenos=true]{cpp}
+const char * p1; // equal to char const * p1;
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[fragile]{{\tt const у указателя}}
+\begin{minted}[linenos=true]{cpp}
+size_t strlen(const char * s);
+int main() {
+  char str[] = "Hello";
+  site_t s = strlen(str);
+}
+\end{minted}
+\begin{enumerate}
+  \uncover<1->{\item Что хотел сказать программист?}
+  \uncover<2->{\item Функция \emph{strlen} не изменяет свой аргумент. Например, программист в main может не делать копию \emph{str} перед вызовом \emph{strlen}.}
+\end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt const у указателя}}
+\begin{minted}[linenos=true]{cpp}
+void strange(const char * s) {
+  char* str = (char*)s;
+  str[0] = 'A'
+}
+\end{minted}
+
+\begin{minted}[linenos=true]{cpp}
+char s[] = "Hello";
+strange(s);
+\end{minted}
+Все ли хорошо?
+
+\begin{minted}[linenos=true]{cpp}
+const char* const s = "Hello";
+strange(s);
+\end{minted}
+Все ли хорошо?
+
+\end{frame}
+
+\begin{frame}[fragile]{{\tt strchr}}
+
+Задача: написать функцию, которая возвращает адрес первого вхождения символа в строку.
+
+\begin{lstlisting}
+char* strchr(const char* s, char ch) {
+  while (*s != 0) {
+    if (*s == ch)
+      return s;
+    s++;
+  }
+  return NULL;
+}
+\end{lstlisting}
+
+\begin{itemize}
+  \item Если функция ничего не нашла, то она возвращает нулевой адрес.
+  \item В стандартной библиотеке языка C есть макрос \# define NULL 0 для более явного обозначения нулевого адреса.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]{{\tt strchr}}
+
+Задача: найти первое и второе вхождение
+
+\begin{lstlisting}
+char s[] = "Hello, world!";
+char* p1;
+char* p2;
+
+p1 = strchr(s, 'o');
+p2 = strchr(p1, 'o');
+
+\end{lstlisting}
+
+Что не так?
+\begin{enumerate}
+  \uncover<2->{\item Есть ли нет первого вхождения, то будет ошибка (p1 --- NULL)}
+  \uncover<3->{\item Если есть первое вхождение, найдет его повторно}
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}[fragile]{{\tt strchr}}
+
+Задача: найти первое и второе вхождение
+
+\begin{lstlisting}
+char s[] = "Hello, world!";
+char* p1;
+char* p2;
+
+p1 = strchr(s, 'o');
+if (p1 != NULL)
+  p2 = strchr(p1 + 1, 'o');
+
+\end{lstlisting}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{{\tt strcpy}}
+
+\begin{lstlisting}
+char* strcpy(char* to, const char* from) {
+  char *save = to;
+  for (; (*to = *from) != '\0'; ++from, ++to);
+  return(save);
+}
+\end{lstlisting}
+Скопируем ли мы последний символ 0?
+
+\end{frame}
+
+\begin{frame}[fragile]{{\tt strcat}}
+
+\begin{lstlisting}
+char* strcat(char *dest, const char *src) {
+  strcpy (dest + strlen(dest), src);
+  return dest;
+}
+\end{lstlisting}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{{\tt inplace reverse}}
+
+\begin{lstlisting}
+void strrev(char* head) {
+  char *tail = head;
+  while(*tail) ++tail;
+  --tail;
+  for( ; head < tail; ++head, --tail) {
+      char h = *head, t = *tail;
+      *head = t;
+      *tail = h;
+  }
+}
+\end{lstlisting}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{{\tt strtok}}
+
+\begin{lstlisting}
+char* strtok( char* str, const char* delim );
+\end{lstlisting}
+
+\begin{lstlisting}
+    char input[] = "one + two * (three - four)!";
+    const char* delimiters = "! +- (*)";
+    char* token = strtok(input, delimiters);
+    while (token) {
+        printf("%s\n", token);
+        token = strtok(NULL, delimiters);
+    }
+\end{lstlisting}
+Как это работает? Есть ли подсказка в объявлении функции?
+
+\end{frame}
+
+\end{document}
+
+
+
+

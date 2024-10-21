@@ -1,0 +1,253 @@
+\documentclass[pdf, 10pt, unicode]{beamer}
+
+\usepackage[T2A]{fontenc}
+%\usepackage[cp1251]{inputenc}
+\usepackage[utf8]{inputenc}
+\usepackage[russian,english]{babel}
+\usepackage{minted}
+\usemintedstyle{perldoc}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{multicol}
+\usepackage{multirow}
+\usepackage{calrsfs}
+\usepackage{listings}
+\usepackage{color}
+
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+% \lstset{basicstyle=\fontsize{7pt}{1em}\ttfamily,
+%         keywordstyle=\fontsize{7pt}{1em}\color{MOOCBlue}\bfseries,
+%         commentstyle=\fontsize{7pt}{1em}\ttfamily\color{MOOCGreen}}
+
+
+\usepackage{caption}
+\usepackage{subcaption}
+
+% \lstset{language=C++,
+%   basicstyle=\footnotesize\itshape,
+%   keywordstyle=\color{black}\bfseries\underbar,
+%   % underlined bold black keywords
+%   identifierstyle={\color{black}},%
+%   commentstyle=\color{brown}, % brown comments
+%   stringstyle=\color{blue}\ttfamily, % typewriter type for strings, blue
+%   showstringspaces=false
+% }
+
+\definecolor{MOOCGrey}{RGB}{230,230,230}
+\definecolor{MOOCBlue}{RGB}{38,57,200}
+\definecolor{MOOCGreen}{RGB}{38,130,63}
+
+\lstset{extendedchars=true}
+\lstset{language=C++, basicstyle=\small\ttfamily,  keywordstyle=\small\color{MOOCBlue}\bfseries,
+        commentstyle=\small\ttfamily\color{MOOCGreen}, showstringspaces=false,
+        extendedchars=true, texcl=true, frame=single,
+        morekeywords={size_t}}
+
+
+
+\newenvironment{changemargin}[2]{%
+\begin{list}{}{%
+\setlength{\topsep}{0pt}%
+\setlength{\leftmargin}{#1}%
+\setlength{\rightmargin}{#2}%
+\setlength{\listparindent}{\parindent}%
+\setlength{\itemindent}{\parindent}%
+\setlength{\parsep}{\parskip}%
+}%
+\item[]}{\end{list}}
+
+
+\usetheme{Copenhagen}
+\usepackage{color}
+
+\usecolortheme[RGB={50,100,200}]{structure}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{itemize
+item}{\scriptsize\raise1.25pt\hbox{\donotcoloroutermaths$\blacktriangleright$}}
+
+\setbeamertemplate{frametitle continuation}[from second]
+
+\title{Воспоминания об stdio.}
+\author{Евгений Линский}
+\date{}
+\usefonttheme[onlymath]{serif}
+
+\setbeamerfont{institute}{size=\normalsize}
+
+\setbeamertemplate{footline} {
+  \hbox{%
+  \begin{beamercolorbox}[wd=0.08\paperwidth,ht=2.5ex,dp=0ex,left]{title in head/foot}%
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=0.46\paperwidth,ht=2.5ex,dp=1ex,center]{title in head/foot}%
+    \usebeamerfont{title in head/foot}{C++}%\insertshortauthor %\insertshorttitle
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=0.46\paperwidth,ht=2.5ex,dp=1ex,right]{date in head/foot}%
+    \usebeamerfont{date in head/foot}
+    \insertframenumber{} / \inserttotalframenumber{}\hspace*{2ex}
+  \end{beamercolorbox}}%
+  \vskip0pt%
+}
+
+\newcommand*{\escape}[1]{\texttt{\textbackslash#1}}
+\newcommand*{\escapeI}[1]{\texttt{\expandafter\string\csname #1\endcsname}}
+\newcommand*{\escapeII}[1]{\texttt{\char`\\#1}}
+
+\sloppy
+
+\begin{document}
+\begin{frame}
+  \vspace{1cm}
+  \large
+  \maketitle
+  \thispagestyle{empty}
+  \vspace{1cm}
+  \date{}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt stdio}}
+\begin{minted}[linenos=true]{cpp}
+FILE* f1 = fopen("in.txt",....);// файл на диске
+FILE* f2 = stdin; // можно читать с клавиатуры
+FILE* f3 = stdout; // можно писать на экран
+\end{minted}
+FILE --- структура, описывающая абстракцию для ввода-вывода (файл на диске, клавиатура, экран).
+Что внутри:
+\begin{enumerate}
+  \item Дескриптор --- идентификатор (целое число) файла внутри ОС
+  \item Промежуточный буфер --- быстрее накопить буфер, а потом за один системный вызов записать его на диск, чем для каждого байта делать отдельный системный вызов
+  \item Текущее положение в файле
+  \item Индикатор ошибки --- была ли ошибка при последней операции
+  \item Индикатор конца файла --- достигнут ли конец файла при последней операции
+\end{enumerate}
+Напрямую с этими полями не работают, а используют функции stdio.
+\end{frame}
+
+\begin{frame}[fragile]{{\tt Текстовые и бинарные файла}}
+\begin{enumerate}
+  \item На диске всегда байты, меняется только способ их интерпретации
+  \item Текстовый формат файла
+    \begin{enumerate}
+        \item Интерпретируется как последовательность символов. Пример: число 100 записывается не как один байт, а как три символа '1' '0' '0' (3 байта).
+        \item Есть спецсимволы: перевод строки, табуляция.
+        \item Проблемы: разные кодировки, в том числе для спецсимволов (перевод строки '\escape{n}': Linux --- 10, Windows --- 10 13)
+        \item Просто интерпретировать, но большой размер файла.
+    \end{enumerate}
+  \item Бинарный формат файла
+    \begin{enumerate}
+        \item Сложные форматы (bmp, wav, elf), для работы нужно описание. Пример: число 100 --- как один байт.
+        \item Еще пример. Заголовок: первые 4 байта ширина, вторые четыре байта высота. Данные: три байта RGB с выравниванием.
+        \item Сложно интерпретировать, но компактный размер файла.
+    \end{enumerate}
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}[fragile]{{\tt stdio}}
+
+FILE --- структура, описывающая абстракцию для ввода-вывода (файл на диске, клавиатура, экран).
+\begin{lstlisting}
+FILE *f1 = fopen("in.txt",....);// файл на диске
+FILE *f2 = stdin; // можно читать с клавиатуры
+FILE *f3 = stdout; // можно писать на экран
+\end{lstlisting}
+
+stdin, stdout --- глобальные переменные в стандартной библиотеке libc.
+
+\begin{itemize}
+  \item getchar -- fgetc(stdin), putchar -- fputc(stdout) -- символы
+  \item gets, puts -- строки (fgets, fputs)
+  \item printf, scanf -- форматный ввод (fprinf, fscanf)
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]{{\tt Считать строку}}
+
+\begin{lstlisting}
+  char s[100];
+  gets(s);
+  scanf("%s", s);
+\end{lstlisting}
+Все ли хорошо?
+\end{frame}
+
+\begin{frame}[fragile]{{\tt Считать строку}}
+
+\begin{lstlisting}
+  char s[100];
+
+  while (ch != '\n' && i < 99 ) {
+    s[i] = getchar();
+    i++;
+  }
+  s[i] = 0;
+\end{lstlisting}
+
+\begin{lstlisting}
+  gets(s); // Max size!!!
+  scanf("%s", s); // Max size!!!
+  fgets(s, 99, stdin);
+  scanf("%99s", s);
+  scanf_s("%99s", name, 100); // Microsoft version
+\end{lstlisting}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{{\tt printf/fprintf/sprintf}}
+\begin{lstlisting}
+fprintf(stdout, ...); //printf
+fscanf(stdin, ....); //scanf
+char s1[] = "3  4";
+sscanf(s1,"%d %d", &a, &b);
+char s2[256];
+sprintf(s2, "%d + %d = %d", a, b, c);
+\end{lstlisting}
+\begin{enumerate}
+  \item Все это небыстро, т.к. внутри функции нужно разобрать форматную строку
+  \item Технология: функция с переменным числом параметров (см. \emph{va\_arg})
+\end{enumerate}
+\url{https://en.cppreference.com/w/cpp/io/c/fprintf}
+\end{frame}
+
+
+\begin{frame}[fragile]{{\tt Переменное число аргументов в C (printf)}}
+va\_start, va\_arg, va\_end --- макросы.
+\begin{minted}[linenos=true]{cpp}
+void simple_printf(const char* fmt, ...) {
+  va_list args;
+  //записать в args адрес следующего за fmt параметра на стеке
+  va_start(args, fmt);
+  while(*fmt != '\0') {
+    if(*fmt=='d') {
+      //достать со стека переменную типа int
+      int i = va_arg(args, int)
+      // здесь должен быть код, который
+      // выводит int на экран с помощью putc
+    }
+    fmt++;
+  }
+  va_end(args);
+}
+//Труднообнаруживаемые ошибки
+printf("%s", 5);
+printf("%d %d", 4); printf("%d", 4, 5);
+\end{minted}
+
+\end{frame}
+
+
+
+\end{document}
+
+
+
+
