@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<problem
+        package="asm.floats"
+        id="myhypot-1"
+        type="standard">
+  <statement language="ru_RU">
+    <description>
+
+<p>На языке ассемблера напишите подпрограмму <tt>okay</tt>
+со следующим прототипом (на Си):</p>
+<pre>void okay(double x, double y, double *r);</pre>
+
+<p>Подпрограмма должна вычислить выражение sqrt(x^4 + y^4) и сохранить
+результат по указателю r.</p>
+
+<p>Подпрограмма должна соблюдать стандартные соглашения о вызовах.
+Должен использоваться стандартный пролог и эпилог функции.
+Для вычислений используйте SSE.</p>
+
+<p>Например, если x == 4.0, y == 3.0, то по указателю r должно быть
+записано значение sqrt(337.0).</p>
+
+</description>
+  </statement>
+<review_comments>
+  <comment>Для доступа к параметрам используйте регистр ebp</comment>
+<comment>Отсутствует/неправильный стандартный пролог</comment>
+</review_comments>
+</problem>
