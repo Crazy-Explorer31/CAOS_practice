@@ -1,0 +1,4 @@
+gcc dot_product_cmp.c dot_product.S dot_product_vec.S -o t
+gcc -O3 dot_product_cmp.c dot_product.S dot_product_vec.S -o t
+gcc -ftree-vectorize -msse2 -mfpmath=sse -O3 dot_product_cmp.c dot_product.S dot_product_vec.S -o t
+gcc -msse3 -O3 dot_product_cmp.c dot_product.S dot_product_vec.S dot_product_vec_intr.c -o t
