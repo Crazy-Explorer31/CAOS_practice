@@ -1,4 +1,4 @@
-truct FileWriteState {
+struct FileWriteState {
     int fd;  // "файловый дескриптор", для вывода на стандартный поток вывода -
              // 1
     unsigned char *buf;  // указатель на буфер
