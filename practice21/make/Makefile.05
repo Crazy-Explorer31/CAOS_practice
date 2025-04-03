@@ -1,0 +1,20 @@
+CFLAGS = -Wall -Werror -Wextra -Iinclude
+NAME = bmp
+
+all: $(NAME)
+
+obj/%.o: src/%.c | obj
+	$(CC) -MMD -c $(CFLAGS) -g -o $@ $<
+
+$(NAME): obj/main.o obj/bmp.o obj/stego.o
+	$(CC) -g -o $(NAME) $^
+
+obj:
+	mkdir -p obj
+
+clean:
+	rm -rf obj $(NAME)
+
+.PHONY: clean all
+
+-include obj/*.d

@@ -1,0 +1,7 @@
+all:
+	gcc -g -Wall -Werror -Wextra -Iinclude src/main.c src/bmp.c src/stego.c -o bmp
+
+clean:
+	rm -rf  ./bmp
+
+.PHONY: clean all

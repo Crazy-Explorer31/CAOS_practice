@@ -1,0 +1,24 @@
+FLAGS = -Wall -Werror -Wextra -Iinclude
+NAME = bmp
+
+all: $(NAME)
+
+obj/main.o: src/main.c include/stego.h include/bmp.h
+	gcc -g -o obj/main.o -c $(FLAGS) src/main.c
+
+obj/bmp.o: src/bmp.c include/bmp.h
+	gcc -g -o obj/bmp.o -c $(FLAGS) src/bmp.c
+
+obj/stego.o: src/stego.c include/stego.h include/bmp.h
+	gcc -g -o obj/stego.o -c $(FLAGS) src/stego.c
+
+$(NAME): obj obj/main.o obj/bmp.o obj/stego.o
+	gcc -g -o $(NAME) obj/main.o obj/bmp.o obj/stego.o
+
+obj:
+	mkdir -p obj
+
+clean:
+	rm -rf obj $(NAME)
+
+.PHONY: clean all
