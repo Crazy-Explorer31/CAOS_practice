@@ -1,6 +1,6 @@
 * 01-exit-_exit.c: 
 	* exit(0) -- функция из libc: скидывает буферы etc, а потом syscall exit
-	* _ exit_(0) -- просто syscall exit
+	* _exit(0) -- просто syscall exit
 	* Если сделать printf("Hello \n"); до буфер сброситься сразу, до fork
 
 * 02-fork-pipe.c: 
